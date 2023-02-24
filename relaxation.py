@@ -41,6 +41,30 @@ def generate_cut(matrix,cut_matrix):
 def check_cut(matrix):
     return False
 
+def find_pivot_element(
+        matrix,
+    )-> dict:
+    # Find pivot element: lowest non-zero
+    # Find index of pivot column
+    pivot_column = int(np.where(matrix[-1] == np.amin(matrix[-1]))[1])
+    masked_matrix = np.delete(matrix,np.where(matrix.T[-1] <= 0),axis=0)
+    pivot_row_division = np.divide(masked_matrix.T[-1],
+                                   masked_matrix.T[pivot_column])
+    masked_pivot_row = pivot_row_division[pivot_row_division > 0]
+    try:
+        min_row = masked_pivot_row.min()
+    except:
+        print(f'No legal candidates for pivot. Simplex infeasible.')
+        # return True, False, {}
+
+    pivot_row_index = np.where(pivot_row_division == min_row)[1]
+    if pivot_row_index.size == 1:
+        pivot_row_index = int(pivot_row_index)
+    else:
+        pivot_row_index = int(pivot_row_index[0])
+
+    return {'column': pivot_column, 'row': pivot_row_index}
+
 def simplex(matrix):
     np.set_printoptions(linewidth=200)
     np.set_printoptions(suppress=True)
@@ -52,24 +76,7 @@ def simplex(matrix):
     # primal_matrix = dual(dual_matrix)
     # print(matrix.round(decimals=2))
     while state:
-        # Find pivot element: lowest non-zero
-        pivot_column = int(np.where(matrix[-1] == np.amin(matrix[-1]))[1])
-        masked_matrix = matrix[:np.where(matrix.T[-1] > 0)[1][-1] + 1]
-        pivot_row_division = np.divide(masked_matrix.T[-1], masked_matrix.T[pivot_column])
-        masked_pivot_row = pivot_row_division[pivot_row_division > 0]
-        try:
-            min_row = masked_pivot_row.min()
-        except:
-            print(f'No legal candidates for pivot. Simplex infeasible.')
-            return True, False, {}
-
-        pivot_row_index = np.where(pivot_row_division == min_row)[1]
-        if pivot_row_index.size == 1:
-            pivot_row_index = int(pivot_row_index)
-        else:
-            pivot_row_index = int(pivot_row_index[0])
-
-        pivot_element = {'column': pivot_column, 'row': pivot_row_index}
+        pivot_element = find_pivot_element(matrix)
 
         # Transform pivot element to 1 by row operation
         pivot_row = matrix[pivot_element['row']] / matrix[pivot_element['row'], pivot_element['column']]
@@ -91,7 +98,7 @@ def simplex(matrix):
             check_matrix[row_index] = row_to_change
             check_zeros = check_matrix.T[pivot_element['column']].any(axis=1)
 
-        matrix = np.insert(check_matrix, pivot_row_index, pivot_row, 0)
+        matrix = np.insert(check_matrix, pivot_element['row'], pivot_row, 0)
 
         # Check if state changed
         state = np.any(matrix[-1] < 0)
@@ -178,8 +185,8 @@ def relaxation(mode,
 
         # Check if cuts are possible
         # Apply cuts and resolve with simplex
-        cut = check_cut(matrix)
-        cut = True
+        # cut = check_cut(matrix)
+        cut = False
 
         while cut:
             cut_matrix = generate_cut(matrix,cut_matrix)
