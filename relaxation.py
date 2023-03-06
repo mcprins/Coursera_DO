@@ -187,7 +187,7 @@ def relaxation(mode,
         # Apply cuts and resolve with simplex
         # cut = check_cut(matrix)
         cut = False
-
+        # test
         while cut:
             cut_matrix = generate_cut(matrix,cut_matrix)
             dual_cut = dual(cut_matrix)
