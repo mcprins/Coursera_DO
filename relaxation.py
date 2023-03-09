@@ -1,6 +1,8 @@
 import numpy as np
 import copy
 
+np.seterr(divide='ignore')
+
 def dual(primal):
     shape = primal[:-1].shape
     constraints = shape[0]
