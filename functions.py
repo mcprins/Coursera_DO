@@ -2,6 +2,7 @@ import copy
 import relaxation
 
 depth = 0
+INITIAL_SIMPLEX = False
 
 class DecisionVariable:
     def __init__(self, lb=int, ub=int, name=str):
@@ -185,7 +186,7 @@ class Solver:
             self.geq_constraint_list,
             self.objective_value_list,
             False)
-        if simplex_output[1] == True:
+        if simplex_output[1] and INITIAL_SIMPLEX:
             print('Optimal integer solution found with simplex')
             self.best_solution = []
             for dvar in self.variable_list:
@@ -201,7 +202,7 @@ class Solver:
         else:
             # Continue with branch and bound if no integer solution has been found with simplex
             self.best_solution = copy.deepcopy(self.variable_list[:])
-            self.dive(depth)
+            self.branch_and_bound()
 
 
     def report(self):
@@ -210,6 +211,10 @@ class Solver:
             output_list.append((var.name,var.value))
         print(f'Best found solution:{output_list }')
         print(f'Objective value: {self.best_found}')
+
+
+    def branch_and_bound(self):
+        self.dive(depth)
 
 
     def dive(self,depth):
