@@ -186,11 +186,14 @@ class Solver:
             self.objective_value_list,
             False)
         if simplex_output[1] == True:
-            print('Optimal integer solution found with Simplex')
+            print('Optimal integer solution found with simplex')
+            self.best_solution = []
             for dvar in self.variable_list:
                 for key in simplex_output[2]:
                     if dvar.name == key:
                         dvar.value = simplex_output[2][key]
+                        self.best_solution.append(dvar)
+            self.best_found = simplex_output[2]['objective_value']
             if self.check_constraints():
                 self.check_max()
             else:
