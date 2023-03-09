@@ -36,7 +36,6 @@ def solve_it(input_data):
 
 
 if __name__ == '__main__':
-
     file_location = '/Users/marnix/Projects/scripts/DO/data/ks_4_0'
     with open(file_location, 'r') as input_data_file:
         solve_it(input_data_file)
