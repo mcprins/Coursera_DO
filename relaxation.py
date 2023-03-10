@@ -1,7 +1,8 @@
 import numpy as np
 import copy
 
-np.seterr(divide='ignore')
+np.seterr(divide='ignore', invalid='ignore')
+
 np.set_printoptions(linewidth=200)
 np.set_printoptions(suppress=True)
 
@@ -281,7 +282,7 @@ def check_if_relaxed_is_above_best(
     elif simplex_result['objective_value'] > best_found:
         return is_promising_branch, is_integer_solution, simplex_result
     else:
-        print(f'Pruned at depth {current_depth}')
+        # print(f"Pruned at depth {current_depth}. Simplex result: {simplex_result['objective_value']} lower than best found: {best_found} ")
         is_promising_branch = False
         return is_promising_branch, is_integer_solution, simplex_result
 
