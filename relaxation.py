@@ -103,10 +103,6 @@ def find_pivot_element(
 def simplex(matrix):
     state = np.any(matrix[-1] < 0)
     # PIVOT
-
-    # dual_matrix = dual(matrix)
-    # primal_matrix = dual(dual_matrix)
-    # print(matrix.round(decimals=2))
     while state:
         pivot_element = find_pivot_element(matrix)
         if type(pivot_element) != dict:
@@ -248,8 +244,8 @@ def read_simplex_output(
         removed_vars: list,
         variable_list: list,
 ):
-    optimal_solution = {}
-    optimal_solution['objective_value'] = matrix[-1, -1] + objective_score
+    simplex_result = {}
+    simplex_result['objective_value'] = matrix[-1, -1] + objective_score
     count = 0
     for var in objective_value_list:
         column = matrix.T[count]
@@ -258,30 +254,46 @@ def read_simplex_output(
             dv_value = matrix[row, -1]
         else:
             dv_value = 0
-        optimal_solution[var[1]] = dv_value
+        simplex_result[var[1]] = dv_value
         count += 1
     if len(removed_vars) > 0:
         for var in removed_vars:
             for dvar in variable_list:
                 if var[1] == dvar.name:
-                    optimal_solution[var[1]] = dvar.value
-    mip = True
+                    simplex_result[var[1]] = dvar.value
+    is_integer_solution = True
     for variable in variable_list:
-        if int(optimal_solution[variable.name]) == optimal_solution[variable.name]:
+        if int(simplex_result[variable.name]) == simplex_result[variable.name]:
             pass
         else:
-            mip = False
-    return mip, optimal_solution
+            is_integer_solution = False
+    return is_integer_solution, simplex_result
 
+def check_if_relaxed_is_above_best(
+        best_found,
+        is_integer_solution,
+        simplex_result,
+        current_depth,
+):
+    is_promising_branch = True
+    if best_found == False:
+        return is_promising_branch, is_integer_solution, simplex_result
+    elif simplex_result['objective_value'] > best_found:
+        return is_promising_branch, is_integer_solution, simplex_result
+    else:
+        print(f'Pruned at depth {current_depth}')
+        is_promising_branch = False
+        return is_promising_branch, is_integer_solution, simplex_result
 
-def relaxation(mode,
+def relaxation(
                current_depth,
                variable_list,
                best_found,
                leq_constraint_list,
                geq_constraint_list,
                objective_value_list,
-               relax):
+               relax
+):
     (
         leq_cnstr_copy,
         variable_list,
@@ -296,36 +308,32 @@ def relaxation(mode,
         current_depth,
         objective_value_list
     )
-    if mode == 1:
-        # Set up tableau
-        matrix = matrix_set_up(
-            leq_cnstr_copy,
-            objective_value_list
-        )
+    # Set up tableau
+    matrix = matrix_set_up(
+        leq_cnstr_copy,
+        objective_value_list
+    )
+    # Run simplex algorithm
+    matrix = simplex(matrix)
+    # Branch and cut
+    matrix = branch_and_cut(matrix)
+    # Read solution
+    (
+        is_integer_solution,
+        simplex_result
+    ) = read_simplex_output(
+    matrix,
+    objective_score,
+    objective_value_list,
+    removed_vars,
+    variable_list,
+    )
+    return check_if_relaxed_is_above_best(
+        best_found,
+        is_integer_solution,
+        simplex_result,
+        current_depth
+    )
 
-        # Run simplex algorithm
-        matrix = simplex(matrix)
 
-        # Branch and cut
-        matrix = branch_and_cut(matrix)
 
-        # Read solution
-        (
-            mip,
-            optimal_solution
-        ) = read_simplex_output(
-        matrix,
-        objective_score,
-        objective_value_list,
-        removed_vars,
-        variable_list,
-        )
-        if best_found == False:
-            return True, mip, optimal_solution
-        elif optimal_solution['objective_value'] > best_found:
-            return True, mip, optimal_solution
-        else:
-            print(f'Pruned at depth {current_depth}')
-            return False, mip, optimal_solution
-    else:
-        pass
