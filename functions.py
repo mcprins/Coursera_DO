@@ -24,6 +24,7 @@ class Solver:
         self.mode = 1
         self.initial_mip = []
 
+
     def update(self):
         # Upper bound
         for dvar in self.variable_list:
@@ -48,7 +49,6 @@ class Solver:
             constraint_string += f'<= {dvar.lb}'
             self.set_constraint(constraint_string)
         print('Added constraints for lower and upper bounds of decision variables')
-
 
 
     def add_decision_variable(self,lb=int,ub=int,name=str):
@@ -120,7 +120,6 @@ class Solver:
             self.leq_constraint_list.append(self.new_constraint_list)
         else:
             self.geq_constraint_list.append(self.new_constraint_list)
-
 
 
     def calculate_objective_value(self,var_list):
@@ -196,9 +195,8 @@ class Solver:
             # Continue with branch and bound if no integer solution has been found with simplex
             self.branch_and_bound()
 
-    def check_if_initial_simplex_solved_mip(self,
-        simplex_result: int,
-    ):
+
+    def check_if_initial_simplex_solved_mip(self, simplex_result: int):
         print('\nOptimal integer solution found with initial simplex solve')
         self.best_solution = []
         for dvar in self.variable_list:
@@ -211,6 +209,7 @@ class Solver:
             self.check_max()
         else:
             pass
+
 
     def report(self):
         output_list = []
@@ -230,9 +229,7 @@ class Solver:
         for lower_node in range(current_depth + 1, len(self.variable_list)):
             self.variable_list[lower_node].value = 0
 
-    def dive(self,
-             depth: int
-    ):
+    def dive(self, depth: int):
         current_depth = depth
         # Loop over all states within lower and upper bound of decision variable
         for variable_value in range(self.variable_list[depth].lb, self.variable_list[depth].ub + 1):
