@@ -177,24 +177,27 @@ class Solver:
 
     def solve(self):
         # Run simplex solver to check if it outputs an integer solution
-        simplex_output = relaxation.relaxation(
-            self.mode,
+        (
+            is_promising_branch,
+            is_integer_solution,
+            simplex_result ) = relaxation.relaxation(
             0,
             self.variable_list,
             self.best_found,
             self.leq_constraint_list,
             self.geq_constraint_list,
             self.objective_value_list,
-            False)
-        if simplex_output[1] and INITIAL_SIMPLEX:
+            False
+        )
+        if is_integer_solution and INITIAL_SIMPLEX:
             print('Optimal integer solution found with simplex')
             self.best_solution = []
             for dvar in self.variable_list:
-                for key in simplex_output[2]:
+                for key in simplex_result:
                     if dvar.name == key:
-                        dvar.value = simplex_output[2][key]
+                        dvar.value = simplex_result[key]
                         self.best_solution.append(dvar)
-            self.best_found = simplex_output[2]['objective_value']
+            self.best_found = simplex_result['objective_value']
             if self.check_constraints():
                 self.check_max()
             else:
@@ -228,8 +231,7 @@ class Solver:
                 self.variable_list[element].value = 0
             # Check constraints
             if self.check_constraints():
-                simplex_output = relaxation.relaxation(
-                self.mode,
+                is_promising_branch, is_integer_solution, simplex_result = relaxation.relaxation(
                 current_depth,
                 self.variable_list,
                 self.best_found,
@@ -238,7 +240,7 @@ class Solver:
                 self.objective_value_list,
                 True)
 
-                if simplex_output[0] == True:
+                if is_promising_branch:
                     self.check_depth(current_depth)
                 else:
                     pass
