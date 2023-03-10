@@ -180,7 +180,8 @@ class Solver:
         (
             is_promising_branch,
             is_integer_solution,
-            simplex_result ) = relaxation.relaxation(
+            simplex_result,
+        ) = relaxation.relaxation(
             0,
             self.variable_list,
             self.best_found,
@@ -190,56 +191,71 @@ class Solver:
             False
         )
         if is_integer_solution and INITIAL_SIMPLEX:
-            print('Optimal integer solution found with simplex')
-            self.best_solution = []
-            for dvar in self.variable_list:
-                for key in simplex_result:
-                    if dvar.name == key:
-                        dvar.value = simplex_result[key]
-                        self.best_solution.append(dvar)
-            self.best_found = simplex_result['objective_value']
-            if self.check_constraints():
-                self.check_max()
-            else:
-                pass
+            self.check_if_initial_simplex_solved_mip(simplex_result)
         else:
             # Continue with branch and bound if no integer solution has been found with simplex
-            self.best_solution = copy.deepcopy(self.variable_list[:])
             self.branch_and_bound()
 
+    def check_if_initial_simplex_solved_mip(self,
+        simplex_result: int,
+    ):
+        print('\nOptimal integer solution found with initial simplex solve')
+        self.best_solution = []
+        for dvar in self.variable_list:
+            for key in simplex_result:
+                if dvar.name == key:
+                    dvar.value = simplex_result[key]
+                    self.best_solution.append(dvar)
+        self.best_found = simplex_result['objective_value']
+        if self.check_constraints():
+            self.check_max()
+        else:
+            pass
 
     def report(self):
         output_list = []
         for var in self.best_solution:
             output_list.append((var.name,var.value))
-        print(f'Best found solution:{output_list }')
+        print(f'\nBest found solution:{output_list }')
         print(f'Objective value: {self.best_found}')
 
 
     def branch_and_bound(self):
+        self.best_solution = copy.deepcopy(self.variable_list[:])
         self.dive(depth)
 
+    def reset_lower_nodes_to_zero(self,
+        current_depth: int,
+    ):
+        for lower_node in range(current_depth + 1, len(self.variable_list)):
+            self.variable_list[lower_node].value = 0
 
-    def dive(self,depth):
+    def dive(self,
+             depth: int
+    ):
         current_depth = depth
         # Loop over all states within lower and upper bound of decision variable
-        for var in range(self.variable_list[depth].lb, self.variable_list[depth].ub + 1):
+        for variable_value in range(self.variable_list[depth].lb, self.variable_list[depth].ub + 1):
             # Set new value of decision variable
-            self.variable_list[current_depth].value = var
+            self.variable_list[current_depth].value = variable_value
             # Reset all values of lower nodes to 0
-            for element in range(current_depth+1,len(self.variable_list)):
-                self.variable_list[element].value = 0
+            self.reset_lower_nodes_to_zero(current_depth)
+
             # Check constraints
             if self.check_constraints():
-                is_promising_branch, is_integer_solution, simplex_result = relaxation.relaxation(
+                (
+                    is_promising_branch,
+                    is_integer_solution,
+                    simplex_result
+                ) = relaxation.relaxation(
                 current_depth,
                 self.variable_list,
                 self.best_found,
                 self.leq_constraint_list,
                 self.geq_constraint_list,
                 self.objective_value_list,
-                True)
-
+                True
+                )
                 if is_promising_branch:
                     self.check_depth(current_depth)
                 else:

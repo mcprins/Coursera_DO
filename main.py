@@ -18,7 +18,7 @@ mip.set_objective_function(objective_function)
 # Set constraints
 constraint_string = '1 * x_1/+ 3 * x_2/ + 2 * x_3 <= 10'
 mip.set_constraint(constraint_string)
-constraint_string = '1 * x_1/+5 * x_2/ + 1 * x_1 <= 8'
+constraint_string = '1 * x_1/+5 * x_2/ + 1 * x_3 <= 8'
 mip.set_constraint(constraint_string)
 
 
